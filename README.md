@@ -54,3 +54,4 @@ O aplicativo inclui as seguintes principais telas:
 ## Sobre o Projeto
 
 Este projeto foi desenvolvido como parte da disciplina de Tópicos Especiais. É uma aplicação de demonstração que simula um serviço de delivery de comida, inspirado em aplicativos como iFood.
+# food-app-front
