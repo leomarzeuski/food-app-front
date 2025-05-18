@@ -3,12 +3,13 @@
 import { useState, useEffect } from "react";
 import { FaStar, FaMotorcycle, FaClock, FaPlus, FaMinus } from "react-icons/fa";
 import { restaurantService, menuItemService, orderService } from "@/services";
-import { getFallbackImageUrl } from "@/utils/imageUtils";
-import SafeImage from "@/components/SafeImage";
+import ratingService, { Rating, CreateRatingDto } from "@/services/ratingService";
 import type { Restaurant } from "@/services/restaurantService";
 import type { MenuItem } from "@/services/menuItemService";
 import type { CreateOrderDto, OrderItem } from "@/services/orderService";
 import { useUser } from "@/context/userContext";
+import Image from "next/image";
+import { toast } from "sonner";
 
 interface MenuItemUI extends MenuItem {
   categoria?: string;
@@ -25,7 +26,12 @@ export default function RestaurantDetail({
   const [cartItems, setCartItems] = useState<OrderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [reviews, setReviews] = useState<Rating[]>([]);
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [userOrders, setUserOrders] = useState<string[]>([]);
   const { user } = useUser();
 
   useEffect(() => {
@@ -48,6 +54,33 @@ export default function RestaurantDetail({
 
         setMenuItems(enhancedMenuItems);
 
+        try {
+          const ratingsData = await ratingService.getAllRatings();
+          const allOrders = await orderService.getOrdersByRestaurant(params.id);
+          const restaurantOrderIds = allOrders.map(order => order.id);
+          
+          const restaurantRatings = ratingsData.filter(rating => 
+            restaurantOrderIds.includes(rating.orderId)
+          );
+          
+          setReviews(restaurantRatings);
+        } catch (error) {
+          console.error("Failed to fetch ratings:", error);
+        }
+
+        if (user?.id) {
+          try {
+            const userOrdersResponse = await orderService.getOrdersByUser(user.id);
+            const restaurantOrders = userOrdersResponse
+              .filter(order => order.restaurantId === params.id)
+              .map(order => order.id);
+            
+            setUserOrders(restaurantOrders);
+          } catch (error) {
+            console.error("Failed to fetch user orders:", error);
+          }
+        }
+
         setLoading(false);
       } catch (error) {
         console.error("Failed to fetch restaurant data:", error);
@@ -59,7 +92,7 @@ export default function RestaurantDetail({
     };
 
     fetchData();
-  }, [params.id]);
+  }, [params.id, user?.id]);
 
   const categories =
     menuItems.length > 0
@@ -130,11 +163,72 @@ export default function RestaurantDetail({
 
       await orderService.createOrder(orderData);
       setCartItems([]);
-      alert("Pedido realizado com sucesso!");
+      toast.success("Pedido realizado com sucesso!");
     } catch (error) {
       console.error("Failed to create order:", error);
-      alert("Erro ao criar pedido. Por favor, tente novamente.");
+      toast.error("Erro ao criar pedido. Por favor, tente novamente.");
     }
+  };
+
+  const handleOpenRatingModal = () => {
+    if (!user) {
+      toast.error("Você precisa estar logado para deixar uma avaliação.");
+      return;
+    }
+
+    if (userOrders.length === 0) {
+      toast.error("Você precisa ter feito um pedido neste restaurante para avaliá-lo.");
+      return;
+    }
+
+    setIsRatingModalOpen(true);
+  };
+
+  const handleSubmitRating = async () => {
+    if (!user || userOrders.length === 0) return;
+
+    try {
+      setSubmitLoading(true);
+
+      const ratingData: CreateRatingDto = {
+        orderId: userOrders[0],
+        userId: user.id,
+        nota: rating,
+        comentario: comment.trim() || undefined
+      };
+
+      const createdRating = await ratingService.createRating(ratingData);
+      
+      setReviews((prev) => [...prev, createdRating]);
+      setIsRatingModalOpen(false);
+      setComment("");
+      setRating(5);
+      
+      toast.success("Avaliação enviada com sucesso!");
+    } catch (error) {
+      console.error("Failed to submit rating:", error);
+      toast.error("Erro ao enviar avaliação. Por favor, tente novamente.");
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('pt-BR', { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric' 
+    }).format(date);
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }).map((_, index) => (
+      <FaStar 
+        key={index} 
+        className={index < rating ? "text-yellow-500" : "text-gray-300"} 
+      />
+    ));
   };
 
   if (loading) {
@@ -156,16 +250,16 @@ export default function RestaurantDetail({
   return (
     <div className="pb-20">
       <div className="relative h-48 w-full mb-16">
-        <SafeImage
-          src={getFallbackImageUrl(restaurant.categories)}
+        <Image
+          src={restaurant.imageUrl}
           alt={restaurant.nome}
           fill
           className="object-cover"
         />
         <div className="absolute -bottom-12 left-4 bg-white p-2 rounded-lg shadow-md">
           <div className="w-24 h-24 relative">
-            <SafeImage
-              src={getFallbackImageUrl(restaurant.categories)}
+            <Image
+              src={restaurant.imageUrl}
               alt={restaurant.nome}
               fill
               className="object-cover rounded-lg"
@@ -178,7 +272,10 @@ export default function RestaurantDetail({
         <h1 className="text-2xl font-bold">{restaurant.nome}</h1>
         <div className="flex items-center mt-1 text-gray-600">
           <span className="flex items-center text-yellow-500 mr-3">
-            <FaStar className="mr-1" /> 4.7
+            <FaStar className="mr-1" /> 
+            {reviews.length > 0 
+              ? (reviews.reduce((acc, r) => acc + r.nota, 0) / reviews.length).toFixed(1) 
+              : "0.0"}
           </span>
           <span className="flex items-center mr-3">
             <FaMotorcycle className="mr-1" /> 30-45 min
@@ -207,31 +304,28 @@ export default function RestaurantDetail({
       <div className="border-b border-gray-200 mt-6">
         <div className="flex space-x-6">
           <button
-            className={`pb-2 px-1 ${
-              activeTab === "cardapio"
+            className={`pb-2 px-1 ${activeTab === "cardapio"
                 ? "border-b-2 border-red-500 text-red-500 font-medium"
                 : "text-gray-500"
-            }`}
+              }`}
             onClick={() => setActiveTab("cardapio")}
           >
             Cardápio
           </button>
           <button
-            className={`pb-2 px-1 ${
-              activeTab === "avaliacoes"
+            className={`pb-2 px-1 ${activeTab === "avaliacoes"
                 ? "border-b-2 border-red-500 text-red-500 font-medium"
                 : "text-gray-500"
-            }`}
+              }`}
             onClick={() => setActiveTab("avaliacoes")}
           >
-            Avaliações
+            Avaliações ({reviews.length})
           </button>
           <button
-            className={`pb-2 px-1 ${
-              activeTab === "info"
+            className={`pb-2 px-1 ${activeTab === "info"
                 ? "border-b-2 border-red-500 text-red-500 font-medium"
                 : "text-gray-500"
-            }`}
+              }`}
             onClick={() => setActiveTab("info")}
           >
             Informações
@@ -300,7 +394,7 @@ export default function RestaurantDetail({
                             </div>
                           )}
                           <div className="w-16 h-16 relative rounded-lg overflow-hidden">
-                            <SafeImage
+                            <Image
                               src={
                                 item.imagemUrl ||
                                 "https://via.placeholder.com/150"
@@ -322,9 +416,126 @@ export default function RestaurantDetail({
 
       {activeTab === "avaliacoes" && (
         <div className="mt-6">
-          <div className="bg-white p-4 rounded-lg shadow-md text-center py-8">
-            <p className="text-gray-500">Sem avaliações no momento</p>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Avaliações</h2>
+            {user && userOrders.length > 0 && (
+              <button 
+                onClick={handleOpenRatingModal}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
+              >
+                Adicionar Avaliação
+              </button>
+            )}
           </div>
+          
+          {reviews.length === 0 ? (
+            <div className="bg-white p-4 rounded-lg shadow-md text-center py-8">
+              <p className="text-gray-500 mb-4">Seja o primeiro a fazer uma avaliação!</p>
+              {user ? (
+                userOrders.length > 0 ? (
+                  <button 
+                    onClick={handleOpenRatingModal}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium"
+                  >
+                    Avaliar Restaurante
+                  </button>
+                ) : (
+                  <p className="text-gray-500 text-sm">
+                    Faça um pedido neste restaurante para poder avaliá-lo
+                  </p>
+                )
+              ) : (
+                <p className="text-gray-500 text-sm">
+                  Faça login para avaliar este restaurante
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <div key={review.id} className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex justify-between">
+                    <h3 className="font-medium">
+                      {user && user.id === review.userId ? user.nome : "Cliente"}
+                    </h3>
+                    <span className="text-gray-500 text-xs">
+                      {formatDate(review.createdAt)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex mt-1 mb-2">
+                    {renderStars(review.nota)}
+                  </div>
+                  
+                  {review.comentario && (
+                    <p className="text-gray-700 text-sm mt-2">
+                      {review.comentario}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {isRatingModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                <h2 className="text-xl font-bold mb-4">Avaliar {restaurant.nome}</h2>
+                
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Usuário</label>
+                  <p className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700">
+                    {user?.nome || "Usuário"}
+                  </p>
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Nota</label>
+                  <div className="flex space-x-2">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setRating(value)}
+                        className="text-2xl focus:outline-none"
+                      >
+                        <FaStar 
+                          className={value <= rating ? "text-yellow-500" : "text-gray-300"} 
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Comentário (opcional)</label>
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    rows={4}
+                    placeholder="Conte sua experiência com este restaurante..."
+                  ></textarea>
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => setIsRatingModalOpen(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSubmitRating}
+                    disabled={submitLoading}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg disabled:bg-red-300"
+                  >
+                    {submitLoading ? "Enviando..." : "Enviar Avaliação"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

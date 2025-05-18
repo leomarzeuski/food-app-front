@@ -1,16 +1,16 @@
 import api from './api';
 
 export interface Localizacao {
-  latitude: number;
-  longitude: number;
+  latitude: number
+  longitude: number
 }
 
 export interface Endereco {
-  rua: string;
-  cidade: string;
-  estado: string;
-  cep: string;
-  numero?: string;
+  rua: string
+  cidade: string
+  estado: string
+  cep: string
+  numero: string
 }
 
 export interface Restaurant {
@@ -22,6 +22,7 @@ export interface Restaurant {
   location: Localizacao;
   createdAt: string;
   userId: string;
+  imageUrl: string;
 }
 
 export interface CreateRestaurantDto {
