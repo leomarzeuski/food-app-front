@@ -1,11 +1,12 @@
 "use client";
 
+import { useAuth } from "@/context/authContext";
 import Link from "next/link";
 import { FaHome, FaShoppingCart, FaUser, FaStore } from "react-icons/fa";
 
 export default function Navbar() {
-  const isLoggedIn = true;
-  const userType = "restaurant";
+  const { user, isAuthenticated } = useAuth();
+  const isRestaurant = user?.tipo === "restaurante";
 
   return (
     <nav className="bg-red-500 text-white shadow-md">
@@ -22,31 +23,36 @@ export default function Navbar() {
             >
               <FaHome /> Início
             </Link>
-            <Link
-              href="/carrinho"
-              className="flex items-center gap-1 hover:text-red-200"
-            >
-              <FaShoppingCart /> Carrinho
-            </Link>
 
-            {isLoggedIn ? (
+            {isAuthenticated && (
               <>
-                {userType === "restaurant" && (
+                {isRestaurant ? (
                   <Link
                     href="/meu-restaurante"
                     className="flex items-center gap-1 hover:text-red-200"
                   >
                     <FaStore /> Meu Restaurante
                   </Link>
+                ) : (
+                  <>
+                    <Link
+                      href="/carrinho"
+                      className="flex items-center gap-1 hover:text-red-200"
+                    >
+                      <FaShoppingCart /> Carrinho
+                    </Link>
+                    <Link
+                      href="/perfil"
+                      className="flex items-center gap-1 hover:text-red-200"
+                    >
+                      <FaUser /> Perfil
+                    </Link>
+                  </>
                 )}
-                <Link
-                  href="/perfil"
-                  className="flex items-center gap-1 hover:text-red-200"
-                >
-                  <FaUser /> Perfil
-                </Link>
               </>
-            ) : (
+            )}
+
+            {!isAuthenticated && (
               <Link
                 href="/login"
                 className="bg-white text-red-500 px-3 py-1 rounded font-medium hover:bg-red-100"

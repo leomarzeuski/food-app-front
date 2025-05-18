@@ -21,6 +21,7 @@ export interface Restaurant {
   isOpen: boolean;
   location: Localizacao;
   createdAt: string;
+  userId: string;
 }
 
 export interface CreateRestaurantDto {
@@ -29,6 +30,7 @@ export interface CreateRestaurantDto {
   categories: string[];
   isOpen: boolean;
   location: Localizacao;
+  userId: string;
 }
 
 const restaurantService = {
@@ -44,6 +46,11 @@ const restaurantService = {
 
   getRestaurantById: async (id: string): Promise<Restaurant> => {
     const response = await api.get<Restaurant>(`/restaurants/${id}`);
+    return response.data;
+  },
+
+  getRestaurantsByUserId: async (userId: string): Promise<Restaurant[]> => {
+    const response = await api.get<Restaurant[]>(`/restaurants/user/${userId}`);
     return response.data;
   },
 

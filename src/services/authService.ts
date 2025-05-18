@@ -11,6 +11,7 @@ export interface LoginDto {
 export interface RegisterDto {
   nome: string;
   email: string;
+  telefone: string;
   senha: string;
   tipo: "cliente" | "restaurante";
 }
