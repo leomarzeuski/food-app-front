@@ -82,7 +82,7 @@ export function OrdersList({ user }: OrdersListProps) {
                     className="flex justify-between text-sm py-1"
                   >
                     <span>
-                      {item.quantidade}x Item #{item.itemId.substring(0, 6)}
+                      {item.quantidade}x Item #{item.itemName}
                     </span>
                     <span>
                       R$ {(item.precoUnit * item.quantidade).toFixed(2)}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   FaUtensils,
   FaEdit,
@@ -10,8 +11,6 @@ import {
   FaStar,
 } from "react-icons/fa";
 import { restaurantService, menuItemService, orderService } from "@/services";
-import { getFallbackImageUrl } from "@/utils/imageUtils";
-import SafeImage from "@/components/SafeImage";
 import type { Restaurant } from "@/services/restaurantService";
 import type { MenuItem, CreateMenuItemDto } from "@/services/menuItemService";
 import type { Order } from "@/services/orderService";
@@ -30,6 +29,8 @@ export default function MeuRestaurantePage() {
   const [newItemImage, setNewItemImage] = useState("");
   const [newItemAvailable, setNewItemAvailable] = useState(true);
   const [showAddItemForm, setShowAddItemForm] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const [isEditingRestaurant, setIsEditingRestaurant] = useState(false);
   const [editName, setEditName] = useState("");
@@ -43,24 +44,20 @@ export default function MeuRestaurantePage() {
       try {
         setLoading(true);
 
-        // Fetch restaurant details
         const restaurantData = await restaurantService.getRestaurantById(
           restaurantId
         );
         setRestaurant(restaurantData);
 
-        // Set form values for editing
         setEditName(restaurantData.nome);
         setEditCategories(restaurantData.categories.join(", "));
         setEditIsOpen(restaurantData.isOpen);
 
-        // Fetch menu items for this restaurant
         const menuItemsData = await menuItemService.getMenuItemsByRestaurant(
           restaurantId
         );
         setMenuItems(menuItemsData);
 
-        // Fetch orders for this restaurant
         const ordersData = await orderService.getOrdersByRestaurant(
           restaurantId
         );
@@ -79,33 +76,63 @@ export default function MeuRestaurantePage() {
     fetchData();
   }, [restaurantId]);
 
-  // Handle creating a new menu item
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewImage(objectUrl);
+
+      setNewItemImage("");
+    }
+  };
+
   const handleAddMenuItem = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!restaurant) return;
 
     try {
+      let imagemUrl = newItemImage;
+
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("image", selectedFile);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          imagemUrl = data.imageUrl;
+        } else {
+          throw new Error("Falha ao fazer upload da imagem");
+        }
+      }
+
       const newMenuItem: CreateMenuItemDto = {
         restauranteId: restaurant.id,
         nome: newItemName,
         descricao: newItemDescription,
         preco: parseFloat(newItemPrice) || 0,
-        imagemUrl: newItemImage || undefined,
+        imagemUrl: imagemUrl || undefined,
         disponivel: newItemAvailable,
       };
 
       const createdItem = await menuItemService.createMenuItem(newMenuItem);
 
-      // Update the menu items list with the new item
       setMenuItems([...menuItems, createdItem]);
 
-      // Clear the form
       setNewItemName("");
       setNewItemDescription("");
       setNewItemPrice("");
       setNewItemImage("");
       setNewItemAvailable(true);
+      setSelectedFile(null);
+      setPreviewImage(null);
       setShowAddItemForm(false);
     } catch (error) {
       console.error("Error creating menu item:", error);
@@ -113,7 +140,6 @@ export default function MeuRestaurantePage() {
     }
   };
 
-  // Handle update menu item availability
   const handleToggleAvailability = async (item: MenuItem) => {
     try {
       const updatedItem = await menuItemService.updateMenuItemAvailability(
@@ -121,7 +147,6 @@ export default function MeuRestaurantePage() {
         !item.disponivel
       );
 
-      // Update the menu items list
       setMenuItems((prevItems) =>
         prevItems.map((prevItem) =>
           prevItem.id === updatedItem.id ? updatedItem : prevItem
@@ -133,14 +158,12 @@ export default function MeuRestaurantePage() {
     }
   };
 
-  // Handle delete menu item
   const handleDeleteMenuItem = async (itemId: string) => {
     if (!confirm("Tem certeza que deseja excluir este item?")) return;
 
     try {
       await menuItemService.deleteMenuItem(itemId);
 
-      // Remove the item from the list
       setMenuItems((prevItems) =>
         prevItems.filter((item) => item.id !== itemId)
       );
@@ -150,7 +173,6 @@ export default function MeuRestaurantePage() {
     }
   };
 
-  // Handle update restaurant
   const handleUpdateRestaurant = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -174,7 +196,6 @@ export default function MeuRestaurantePage() {
     }
   };
 
-  // Handle order status update
   const handleUpdateOrderStatus = async (
     orderId: string,
     newStatus: Order["status"]
@@ -185,7 +206,6 @@ export default function MeuRestaurantePage() {
         newStatus
       );
 
-      // Update orders list
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
           order.id === updatedOrder.id ? updatedOrder : order
@@ -195,6 +215,23 @@ export default function MeuRestaurantePage() {
       console.error("Error updating order status:", error);
       alert("Não foi possível atualizar o status do pedido.");
     }
+  };
+
+  const getFallbackImageUrl = (categories: string[] = []) => {
+    const categoryString = categories.join(" ").toLowerCase();
+
+    if (categoryString.includes("pizza")) {
+      return "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2070&auto=format&fit=crop";
+    } else if (categoryString.includes("hambúrguer")) {
+      return "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=2065&auto=format&fit=crop";
+    } else if (
+      categoryString.includes("japonesa") ||
+      categoryString.includes("sushi")
+    ) {
+      return "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=2070&auto=format&fit=crop";
+    }
+
+    return "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=2070&auto=format&fit=crop";
   };
 
   if (loading) {
@@ -217,7 +254,7 @@ export default function MeuRestaurantePage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row gap-6 mb-8">
         <div className="relative w-32 h-32 rounded-lg overflow-hidden">
-          <SafeImage
+          <Image
             src={getFallbackImageUrl(restaurant.categories)}
             alt={restaurant.nome}
             fill
@@ -324,7 +361,6 @@ export default function MeuRestaurantePage() {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="border-b border-gray-200 mb-6">
         <div className="flex space-x-6">
           <button
@@ -366,7 +402,6 @@ export default function MeuRestaurantePage() {
         </div>
       </div>
 
-      {/* Cardápio Content */}
       {activeTab === "cardapio" && (
         <div>
           <div className="flex justify-between items-center mb-6">
@@ -385,7 +420,6 @@ export default function MeuRestaurantePage() {
             </button>
           </div>
 
-          {/* Add New Item Form */}
           {showAddItemForm && (
             <form
               onSubmit={handleAddMenuItem}
@@ -432,15 +466,35 @@ export default function MeuRestaurantePage() {
 
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    URL da Imagem
+                    Imagem do Item
                   </label>
-                  <input
-                    type="text"
-                    value={newItemImage}
-                    onChange={(e) => setNewItemImage(e.target.value)}
-                    className="w-full p-2 border rounded"
-                    placeholder="https://..."
-                  />
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="w-full p-2 border rounded"
+                    />
+                    {previewImage && (
+                      <div className="relative w-24 h-24 mt-2">
+                        <Image
+                          src={previewImage}
+                          alt="Preview"
+                          fill
+                          className="object-cover rounded"
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500">Ou use uma URL:</p>
+                    <input
+                      type="text"
+                      value={newItemImage}
+                      onChange={(e) => setNewItemImage(e.target.value)}
+                      className="w-full p-2 border rounded"
+                      placeholder="https://..."
+                      disabled={!!selectedFile}
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -471,7 +525,6 @@ export default function MeuRestaurantePage() {
             </form>
           )}
 
-          {/* Menu Items List */}
           {menuItems.length === 0 ? (
             <div className="bg-gray-100 p-8 rounded-lg text-center">
               <p className="text-gray-600">
@@ -487,7 +540,7 @@ export default function MeuRestaurantePage() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-16 h-16 relative rounded-lg overflow-hidden">
-                      <SafeImage
+                      <Image
                         src={
                           item.imagemUrl || "https://via.placeholder.com/150"
                         }
@@ -530,7 +583,6 @@ export default function MeuRestaurantePage() {
         </div>
       )}
 
-      {/* Pedidos Content */}
       {activeTab === "pedidos" && (
         <div>
           <h2 className="text-xl font-semibold mb-6">Pedidos Recebidos</h2>
@@ -551,7 +603,8 @@ export default function MeuRestaurantePage() {
                       <span className="text-gray-500 text-sm">
                         Pedido #{order.id.substring(0, 8)}
                       </span>
-                      <h3 className="font-bold">Cliente: {order.userId}</h3>
+                      <h3 className="font-bold">Cliente: {order.userName}</h3>
+                      <h2 className="font-bold">Cliente ID: {order.userId}</h2>
                       <p className="text-sm text-gray-600">
                         {new Date(order.createdAt).toLocaleString("pt-BR")}
                       </p>
@@ -625,7 +678,6 @@ export default function MeuRestaurantePage() {
         </div>
       )}
 
-      {/* Avaliações Content */}
       {activeTab === "avaliacoes" && (
         <div>
           <h2 className="text-xl font-semibold mb-6">

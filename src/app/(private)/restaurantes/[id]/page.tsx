@@ -8,8 +8,8 @@ import SafeImage from "@/components/SafeImage";
 import type { Restaurant } from "@/services/restaurantService";
 import type { MenuItem } from "@/services/menuItemService";
 import type { CreateOrderDto, OrderItem } from "@/services/orderService";
+import { useUser } from "@/context/userContext";
 
-// Extended MenuItem interface for UI needs
 interface MenuItemUI extends MenuItem {
   categoria?: string;
 }
@@ -26,26 +26,24 @@ export default function RestaurantDetail({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch restaurant and menu items
+  const { user } = useUser();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch restaurant details
         const restaurantData = await restaurantService.getRestaurantById(
           params.id
         );
         setRestaurant(restaurantData);
 
-        // Fetch menu items for this restaurant
         const menuItemsData = await menuItemService.getMenuItemsByRestaurant(
           params.id
         );
 
-        // Add categories to menu items if needed
         const enhancedMenuItems = menuItemsData.map((item, index) => ({
           ...item,
-          categoria: index % 2 === 0 ? "Principais" : "Bebidas", // Example categorization
+          categoria: index % 2 === 0 ? "Principais" : "Bebidas",
         }));
 
         setMenuItems(enhancedMenuItems);
@@ -63,13 +61,11 @@ export default function RestaurantDetail({
     fetchData();
   }, [params.id]);
 
-  // Calculate categories from menu items
   const categories =
     menuItems.length > 0
       ? [...new Set(menuItems.map((item) => item.categoria || "Sem categoria"))]
       : [];
 
-  // Handle add to cart
   const addToCart = (item: MenuItemUI) => {
     setCartItems((prev) => {
       const existingItem = prev.find((cartItem) => cartItem.itemId === item.id);
@@ -86,13 +82,13 @@ export default function RestaurantDetail({
             itemId: item.id,
             quantidade: 1,
             precoUnit: item.preco,
+            itemName: item.nome,
           },
         ];
       }
     });
   };
 
-  // Handle remove from cart
   const removeFromCart = (itemId: string) => {
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.itemId === itemId);
@@ -108,13 +104,11 @@ export default function RestaurantDetail({
     });
   };
 
-  // Get item quantity in cart
   const getItemQuantity = (itemId: string) => {
     const item = cartItems.find((item) => item.itemId === itemId);
     return item ? item.quantidade : 0;
   };
 
-  // Calculate total cart price
   const calculateTotal = () => {
     return cartItems.reduce(
       (total, item) => total + item.precoUnit * item.quantidade,
@@ -122,24 +116,19 @@ export default function RestaurantDetail({
     );
   };
 
-  // Handle create order
   const handleCreateOrder = async () => {
     if (!restaurant || cartItems.length === 0) return;
 
     try {
-      // In a real app, you would get the user ID from authentication
-      const userId = "user1"; // Placeholder
-
       const orderData: CreateOrderDto = {
-        userId,
+        userId: user?.id || "",
+        userName: user?.nome || "",
         restaurantId: restaurant.id,
         status: "novo",
         items: cartItems,
       };
 
       await orderService.createOrder(orderData);
-      // After successful order creation, redirect to order confirmation or user's orders page
-      // For now, just clear the cart
       setCartItems([]);
       alert("Pedido realizado com sucesso!");
     } catch (error) {
@@ -166,7 +155,6 @@ export default function RestaurantDetail({
 
   return (
     <div className="pb-20">
-      {/* Restaurant Header */}
       <div className="relative h-48 w-full mb-16">
         <SafeImage
           src={getFallbackImageUrl(restaurant.categories)}
@@ -186,7 +174,6 @@ export default function RestaurantDetail({
         </div>
       </div>
 
-      {/* Restaurant Info */}
       <div className="pl-32">
         <h1 className="text-2xl font-bold">{restaurant.nome}</h1>
         <div className="flex items-center mt-1 text-gray-600">
@@ -217,7 +204,6 @@ export default function RestaurantDetail({
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="border-b border-gray-200 mt-6">
         <div className="flex space-x-6">
           <button
@@ -253,7 +239,6 @@ export default function RestaurantDetail({
         </div>
       </div>
 
-      {/* Menu Content */}
       {activeTab === "cardapio" && (
         <div className="mt-6">
           {menuItems.length === 0 ? (
@@ -335,7 +320,6 @@ export default function RestaurantDetail({
         </div>
       )}
 
-      {/* Avaliações Content */}
       {activeTab === "avaliacoes" && (
         <div className="mt-6">
           <div className="bg-white p-4 rounded-lg shadow-md text-center py-8">
@@ -344,7 +328,6 @@ export default function RestaurantDetail({
         </div>
       )}
 
-      {/* Info Content */}
       {activeTab === "info" && (
         <div className="mt-6">
           <div className="bg-white p-4 rounded-lg shadow-md">
@@ -369,7 +352,6 @@ export default function RestaurantDetail({
         </div>
       )}
 
-      {/* Floating Cart Button */}
       {cartItems.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
           <div className="flex justify-between items-center mb-2">

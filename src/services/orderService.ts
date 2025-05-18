@@ -4,6 +4,7 @@ export interface OrderItem {
   itemId: string;
   quantidade: number;
   precoUnit: number;
+  itemName: string;
 }
 
 export interface Order {
@@ -13,10 +14,12 @@ export interface Order {
   status: 'novo' | 'preparando' | 'pronto' | 'entregando' | 'entregue' | 'cancelado';
   items: OrderItem[];
   createdAt: string;
+  userName: string;
 }
 
 export interface CreateOrderDto {
   userId: string;
+  userName: string;
   restaurantId: string;
   status: 'novo' | 'preparando' | 'pronto' | 'entregando' | 'entregue' | 'cancelado';
   items: OrderItem[];
