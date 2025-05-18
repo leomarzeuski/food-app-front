@@ -12,7 +12,7 @@ export interface RegisterDto {
   nome: string;
   email: string;
   senha: string;
-  tipo: 'cliente' | 'entregador';
+  tipo: "cliente" | "restaurante";
 }
 
 export interface AuthResponse {

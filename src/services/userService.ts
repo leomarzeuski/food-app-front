@@ -5,7 +5,7 @@ export interface User {
   id: string;
   nome: string;
   email: string;
-  tipo: 'cliente' | 'entregador';
+  tipo: "cliente" | "restaurante";
   telefone?: string;
   enderecos?: Address[];
 }
@@ -13,7 +13,7 @@ export interface User {
 export interface RegisterUserDto {
   nome: string;
   email: string;
-  tipo: 'cliente' | 'entregador';
+  tipo: "cliente" | "restaurante";
 }
 
 export interface CreateAddressDto {
@@ -52,40 +52,6 @@ const userService = {
   deleteUser: async (id: string): Promise<void> => {
     await api.delete(`/users/${id}`);
   },
-
-  
-  removeAddress: async (userId: string, addressId: string): Promise<User> => {
-    const response = await api.delete<User>(`/users/${userId}/addresses/${addressId}`);
-    return response.data;
-  },
-
-  addAddress: async (userId: string, addressData: CreateAddressDto): Promise<User> => {
-    const response = await api.post<User>(`/users/${userId}/addresses`, addressData);
-    return response.data;
-  },
-
-  getUserAddresses: async (userId: string): Promise<Address[]> => {
-    const response = await api.get<Address[]>(`/users/${userId}/addresses`);
-    return response.data;
-  },
-
-  updateAddress: async (
-    userId: string, 
-    addressId: string, 
-    addressData: Partial<CreateAddressDto>
-  ): Promise<User> => {
-    const response = await api.put<User>(
-      `/users/${userId}/addresses/${addressId}`, 
-      addressData
-    );
-    return response.data;
-  },
-
-  deleteAddress: async (userId: string, addressId: string): Promise<User> => {
-    const response = await api.delete<User>(`/users/${userId}/addresses/${addressId}`);
-    return response.data;
-  }
-
 };
 
 export default userService; 

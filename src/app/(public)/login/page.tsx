@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
-  const [tipo, setTipo] = useState<"cliente" | "entregador">("cliente");
+  const [tipo, setTipo] = useState<"cliente" | "restaurante">("cliente");
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -115,13 +115,13 @@ export default function LoginPage() {
                 id="tipo"
                 value={tipo}
                 onChange={(e) =>
-                  setTipo(e.target.value as "cliente" | "entregador")
+                  setTipo(e.target.value as "cliente" | "restaurante")
                 }
                 className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
                 required={!isLogin}
               >
                 <option value="cliente">Cliente</option>
-                <option value="entregador">Entregador</option>
+                <option value="restaurante">Restaurante</option>
               </select>
             </div>
           )}
