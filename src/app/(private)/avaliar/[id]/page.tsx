@@ -36,14 +36,6 @@ export default function AvaliarPage({ params }: { params: { id: string } }) {
 
     // Simulate API call
     setTimeout(() => {
-      // In a real app, we would send this data to an API
-      console.log({
-        pedidoId: pedido.id,
-        restauranteRating,
-        entregadorRating,
-        comentario,
-      });
-
       alert("Avaliação enviada com sucesso!");
       router.push("/perfil");
     }, 1500);

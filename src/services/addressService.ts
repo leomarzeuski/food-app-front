@@ -1,22 +1,19 @@
+// services/addressService.ts
+import { Address } from '@/context/userContext';
 import api from './api';
 
-export interface Address {
-  id: string;
-  userId: string;
-  rua: string;
-  numero: string;
-  cidade: string;
-  estado: string;
-  cep: string;
-}
-
 export interface CreateAddressDto {
-  userId: string;
+  entityId: string;
+  entityType: 'user' | 'restaurant';
+  apelido?: string;
   rua: string;
   numero: string;
+  complemento?: string;
+  bairro: string;
   cidade: string;
   estado: string;
   cep: string;
+  principal?: boolean;
 }
 
 const addressService = {
@@ -25,8 +22,8 @@ const addressService = {
     return response.data;
   },
 
-  getAllAddresses: async (): Promise<Address[]> => {
-    const response = await api.get<Address[]>('/addresses');
+  getAddressesByEntity: async (entityId: string, entityType: 'user' | 'restaurant'): Promise<Address[]> => {
+    const response = await api.get<Address[]>(`/addresses?entityId=${entityId}&entityType=${entityType}`);
     return response.data;
   },
 
@@ -35,19 +32,18 @@ const addressService = {
     return response.data;
   },
 
-  getAddressesByUser: async (userId: string): Promise<Address[]> => {
-    const response = await api.get<Address[]>(`/addresses/user/${userId}`);
-    return response.data;
-  },
-
-  updateAddress: async (id: string, addressData: Partial<Address>): Promise<Address> => {
+  updateAddress: async (id: string, addressData: Partial<CreateAddressDto>): Promise<Address> => {
     const response = await api.put<Address>(`/addresses/${id}`, addressData);
     return response.data;
   },
 
   deleteAddress: async (id: string): Promise<void> => {
     await api.delete(`/addresses/${id}`);
+  },
+  
+  setAddressAsPrimary: async (id: string, entityId: string, entityType: 'user' | 'restaurant'): Promise<void> => {
+    await api.put(`/addresses/${id}/primary`, { entityId, entityType });
   }
 };
 
-export default addressService; 
+export default addressService;

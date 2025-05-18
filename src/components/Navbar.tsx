@@ -1,10 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { FaHome, FaUtensils, FaShoppingCart, FaUser } from "react-icons/fa";
+import {
+  FaHome,
+  FaUtensils,
+  FaShoppingCart,
+  FaUser,
+  FaStore,
+} from "react-icons/fa";
 
 export default function Navbar() {
-  const isLoggedIn = false; // For demo purposes, hardcoded as false
+  const isLoggedIn = true; // Changed to true for demo purposes
+  const userType = "restaurant"; // Options: "customer", "restaurant", "admin"
 
   return (
     <nav className="bg-red-500 text-white shadow-md">
@@ -33,13 +40,24 @@ export default function Navbar() {
             >
               <FaShoppingCart /> Carrinho
             </Link>
+
             {isLoggedIn ? (
-              <Link
-                href="/perfil"
-                className="flex items-center gap-1 hover:text-red-200"
-              >
-                <FaUser /> Perfil
-              </Link>
+              <>
+                {userType === "restaurant" && (
+                  <Link
+                    href="/meu-restaurante"
+                    className="flex items-center gap-1 hover:text-red-200"
+                  >
+                    <FaStore /> Meu Restaurante
+                  </Link>
+                )}
+                <Link
+                  href="/perfil"
+                  className="flex items-center gap-1 hover:text-red-200"
+                >
+                  <FaUser /> Perfil
+                </Link>
+              </>
             ) : (
               <Link
                 href="/login"

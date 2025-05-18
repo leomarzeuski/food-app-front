@@ -2,39 +2,59 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FaArrowLeft } from "react-icons/fa";
+import { useRouter } from "next/navigation";
+import authService from "@/services/authService";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [nome, setNome] = useState("");
+  const [tipo, setTipo] = useState<"cliente" | "entregador">("cliente");
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulating API call
-    setTimeout(() => {
+    try {
       if (isLogin) {
-        // Simulated login
-        console.log("Login", { email, password });
-        alert("Login realizado com sucesso!");
+        // Login
+        await authService.login({
+          email,
+          senha: password,
+        });
+        toast.success("Login realizado com sucesso!");
       } else {
-        // Simulated registration
-        console.log("Cadastro", { email, password });
-        alert("Cadastro realizado com sucesso!");
+        // Registro
+        await authService.register({
+          nome,
+          email,
+          senha: password,
+          tipo,
+        });
+        toast.success("Cadastro realizado com sucesso!");
       }
+
+      // Redirecionar para a página inicial
+      router.push("/");
+    } catch (error) {
+      console.error("Erro de autenticação:", error);
+      toast.error(
+        isLogin
+          ? "Falha ao realizar login. Verifique suas credenciais."
+          : "Falha ao realizar cadastro. Tente novamente."
+      );
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
     <div className="max-w-md mx-auto">
       <div className="mb-6">
-        <Link href="/" className="inline-block mb-4">
-          <FaArrowLeft />
-        </Link>
         <h1 className="text-2xl font-bold">
           {isLogin ? "Entrar na sua conta" : "Criar uma conta"}
         </h1>
@@ -42,6 +62,22 @@ export default function LoginPage() {
 
       <div className="bg-white rounded-lg shadow-md p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
+          {!isLogin && (
+            <div>
+              <label htmlFor="nome" className="block mb-1 font-medium">
+                Nome
+              </label>
+              <input
+                type="text"
+                id="nome"
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                required={!isLogin}
+              />
+            </div>
+          )}
+
           <div>
             <label htmlFor="email" className="block mb-1 font-medium">
               Email
@@ -69,6 +105,26 @@ export default function LoginPage() {
               required
             />
           </div>
+
+          {!isLogin && (
+            <div>
+              <label htmlFor="tipo" className="block mb-1 font-medium">
+                Tipo de Conta
+              </label>
+              <select
+                id="tipo"
+                value={tipo}
+                onChange={(e) =>
+                  setTipo(e.target.value as "cliente" | "entregador")
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                required={!isLogin}
+              >
+                <option value="cliente">Cliente</option>
+                <option value="entregador">Entregador</option>
+              </select>
+            </div>
+          )}
 
           {isLogin && (
             <div className="text-right">
@@ -114,21 +170,6 @@ export default function LoginPage() {
                 Ou continue com
               </span>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            <button
-              type="button"
-              className="py-2 px-4 border border-gray-300 rounded-lg flex items-center justify-center font-medium"
-            >
-              Google
-            </button>
-            <button
-              type="button"
-              className="py-2 px-4 border border-gray-300 rounded-lg flex items-center justify-center font-medium"
-            >
-              Facebook
-            </button>
           </div>
         </div>
       </div>
