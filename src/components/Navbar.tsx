@@ -41,6 +41,11 @@ export default function Navbar() {
     setIsMenuOpen(false);
   };
 
+  const handleLogout = async () => {
+    await logout();
+    closeMenu();
+  };
+
   return (
     <nav className="bg-red-500 text-white shadow-md">
       <div className="container mx-auto px-4 py-3">
@@ -98,7 +103,7 @@ export default function Navbar() {
                       </Link>
                     </>
                   )}
-                  <Button onClick={logout}>Sair</Button>
+                  <Button onClick={handleLogout}>Sair</Button>
                 </>
               )}
 
@@ -158,13 +163,7 @@ export default function Navbar() {
                     </Link>
                   </>
                 )}
-                <Button
-                  onClick={() => {
-                    logout();
-                    closeMenu();
-                  }}
-                  className="w-full"
-                >
+                <Button onClick={handleLogout} className="w-full">
                   Sair
                 </Button>
               </>

@@ -9,13 +9,13 @@ import React, {
 } from "react";
 import authService from "@/services/authService";
 import type { User } from "@/services/userService";
-import Router from "next/router";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const checkAuth = () => {
@@ -47,11 +48,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
+  const logout = async () => {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
-    Router.push("/");
+    router.push("/");
   };
 
   if (loading) {
