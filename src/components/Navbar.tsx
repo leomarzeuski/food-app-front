@@ -3,7 +3,6 @@
 import { useAuth } from "@/context/authContext";
 import { useCart } from "@/context/cartContext";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   FaHome,
   FaShoppingCart,
@@ -18,7 +17,6 @@ import { useState, useEffect } from "react";
 export default function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const { itemCount } = useCart();
-  const router = useRouter();
   const isRestaurant = user?.tipo === "restaurante";
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -46,7 +44,6 @@ export default function Navbar() {
   const handleLogout = async () => {
     await logout();
     closeMenu();
-    router.push("/");
   };
 
   return (

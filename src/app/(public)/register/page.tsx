@@ -96,24 +96,34 @@ export default function RegisterPage() {
         tipo,
       });
 
-      await addressService.createAddress({
-        entityId: authResponse.user.id,
-        entityType: "user" as "user" | "restaurant",
-        apelido: addressData.apelido,
-        rua: addressData.rua,
-        numero: addressData.numero,
-        complemento: addressData.complemento || undefined,
-        bairro: addressData.bairro,
-        cidade: addressData.cidade,
-        estado: addressData.estado,
-        cep: addressData.cep,
-        principal: true,
-      });
+      const userId = authResponse.user.id;
 
-      toast.success("Cadastro realizado com sucesso!");
-      router.push("/login");
+      try {
+        await addressService.createAddress({
+          entityId: userId,
+          entityType: "user" as "user" | "restaurant",
+          apelido: addressData.apelido,
+          rua: addressData.rua,
+          numero: addressData.numero,
+          complemento: addressData.complemento || undefined,
+          bairro: addressData.bairro,
+          cidade: addressData.cidade,
+          estado: addressData.estado,
+          cep: addressData.cep,
+          principal: true,
+        });
+
+        toast.success("Cadastro realizado com sucesso!");
+        router.push("/login");
+      } catch (addressError) {
+        console.error("Erro ao cadastrar endereço:", addressError);
+        toast.error(
+          "Usuário criado, mas houve um erro ao salvar o endereço. Você poderá adicionar um endereço depois de fazer login."
+        );
+        router.push("/login");
+      }
     } catch (error) {
-      console.error("Erro ao cadastrar:", error);
+      console.error("Erro ao cadastrar usuário:", error);
       toast.error(error as string);
     } finally {
       setLoading(false);
