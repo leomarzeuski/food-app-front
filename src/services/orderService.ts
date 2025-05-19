@@ -5,6 +5,9 @@ export interface OrderItem {
   quantidade: number;
   precoUnit: number;
   itemName: string;
+  restauranteId?: string;
+  restauranteName?: string;
+  imageUrl?: string;
 }
 
 export interface Order {
@@ -23,6 +26,7 @@ export interface CreateOrderDto {
   restaurantId: string;
   status: 'novo' | 'preparando' | 'pronto' | 'entregando' | 'entregue' | 'cancelado';
   items: OrderItem[];
+  addressId?: string;
 }
 
 const orderService = {

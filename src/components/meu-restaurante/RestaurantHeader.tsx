@@ -1,8 +1,9 @@
 import { useState } from "react";
 import Image from "next/image";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaCamera } from "react-icons/fa";
 import { restaurantService } from "@/services";
 import type { Restaurant } from "@/services/restaurantService";
+import { getFallbackImageUrl } from "@/utils/imageUtils";
 
 interface RestaurantHeaderProps {
   restaurant: Restaurant;
@@ -19,22 +20,31 @@ export default function RestaurantHeader({
     restaurant.categories.join(", ")
   );
   const [editIsOpen, setEditIsOpen] = useState(restaurant.isOpen);
+  const [editImageUrl, setEditImageUrl] = useState(restaurant.imageUrl || "");
+  const [imagePreview, setImagePreview] = useState(restaurant.imageUrl || "");
 
-  const getFallbackImageUrl = (categories: string[] = []) => {
-    const categoryString = categories.join(" ").toLowerCase();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (categoryString.includes("pizza")) {
-      return "https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2070&auto=format&fit=crop";
-    } else if (categoryString.includes("hambúrguer")) {
-      return "https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=2065&auto=format&fit=crop";
-    } else if (
-      categoryString.includes("japonesa") ||
-      categoryString.includes("sushi")
-    ) {
-      return "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?q=80&w=2070&auto=format&fit=crop";
+    if (file.size > 2 * 1024 * 1024) {
+      alert("A imagem deve ter no máximo 2MB");
+      return;
     }
 
-    return "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=2070&auto=format&fit=crop";
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setImagePreview(result);
+      setEditImageUrl(result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    setEditImageUrl(url);
+    setImagePreview(url);
   };
 
   const handleUpdateRestaurant = async (e: React.FormEvent) => {
@@ -47,6 +57,7 @@ export default function RestaurantHeader({
           nome: editName,
           categories: editCategories.split(",").map((cat) => cat.trim()),
           isOpen: editIsOpen,
+          imageUrl: editImageUrl,
         }
       );
 
@@ -58,16 +69,57 @@ export default function RestaurantHeader({
     }
   };
 
+  const displayImageUrl =
+    restaurant.imageUrl || getFallbackImageUrl(restaurant.categories);
+
   return (
     <div className="flex flex-col md:flex-row gap-6 mb-8">
-      <div className="relative w-32 h-32 rounded-lg overflow-hidden">
-        <Image
-          src={getFallbackImageUrl(restaurant.categories)}
-          alt={restaurant.nome}
-          fill
-          className="object-cover"
-        />
-      </div>
+      {isEditingRestaurant ? (
+        <div className="w-32">
+          <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-gray-100 mb-2">
+            {imagePreview ? (
+              <Image
+                src={imagePreview}
+                alt={editName}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full bg-gray-200">
+                <FaCamera className="text-gray-400 text-3xl" />
+              </div>
+            )}
+          </div>
+          <div className="text-center">
+            <label className="cursor-pointer block bg-blue-500 text-white text-xs px-2 py-1 rounded hover:bg-blue-600 mb-1">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              Enviar imagem
+            </label>
+            <p className="text-xs text-gray-500">ou</p>
+            <input
+              type="text"
+              value={editImageUrl}
+              onChange={handleImageUrlChange}
+              placeholder="URL da imagem"
+              className="mt-1 p-1 text-xs w-full border rounded"
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="relative w-32 h-32 rounded-lg overflow-hidden">
+          <Image
+            src={displayImageUrl}
+            alt={restaurant.nome}
+            fill
+            className="object-cover"
+          />
+        </div>
+      )}
 
       <div className="flex-1">
         {isEditingRestaurant ? (

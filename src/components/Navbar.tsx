@@ -1,11 +1,14 @@
 "use client";
 
 import { useAuth } from "@/context/authContext";
+import { useCart } from "@/context/cartContext";
 import Link from "next/link";
 import { FaHome, FaShoppingCart, FaUser, FaStore } from "react-icons/fa";
+import { Button } from "./ui/button";
 
 export default function Navbar() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
+  const { itemCount } = useCart();
   const isRestaurant = user?.tipo === "restaurante";
 
   return (
@@ -37,9 +40,15 @@ export default function Navbar() {
                   <>
                     <Link
                       href="/carrinho"
-                      className="flex items-center gap-1 hover:text-red-200"
+                      className="flex items-center gap-1 hover:text-red-200 relative"
                     >
-                      <FaShoppingCart /> Carrinho
+                      <FaShoppingCart />
+                      <span>Carrinho</span>
+                      {itemCount > 0 && (
+                        <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                          {itemCount > 99 ? "99+" : itemCount}
+                        </div>
+                      )}
                     </Link>
                     <Link
                       href="/perfil"
@@ -49,6 +58,7 @@ export default function Navbar() {
                     </Link>
                   </>
                 )}
+                <Button onClick={logout}>Sair</Button>
               </>
             )}
 

@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import authService from "@/services/authService";
 import type { User } from "@/services/userService";
+import Router from "next/router";
 
 interface AuthContextType {
   user: User | null;
@@ -51,10 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authService.logout();
     setUser(null);
     setIsAuthenticated(false);
+    Router.push("/");
   };
 
   if (loading) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return (

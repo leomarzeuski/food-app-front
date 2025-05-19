@@ -32,6 +32,7 @@ export interface CreateRestaurantDto {
   isOpen: boolean;
   location: Localizacao;
   userId: string;
+  imageUrl: string;
 }
 
 const restaurantService = {

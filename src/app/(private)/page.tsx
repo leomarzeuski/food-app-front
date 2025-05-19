@@ -10,7 +10,6 @@ import Image from "next/image";
 interface RestaurantUI extends Restaurant {
   rating?: number;
   deliveryTime?: string;
-  // imageUrl?: string;
 }
 
 export default function RestaurantesPage() {
@@ -114,10 +113,11 @@ export default function RestaurantesPage() {
             {categories.map((category) => (
               <button
                 key={category}
-                className={`${activeCategory === category
+                className={`${
+                  activeCategory === category
                     ? "bg-red-500 text-white"
                     : "bg-gray-200 text-gray-800"
-                  } px-3 py-1 rounded-full text-sm`}
+                } px-3 py-1 rounded-full text-sm`}
                 onClick={() => handleCategoryClick(category)}
               >
                 {category}
@@ -151,7 +151,6 @@ export default function RestaurantesPage() {
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
               >
                 <div className="relative h-40 w-full">
-                 
                   <Image
                     src={restaurant.imageUrl}
                     alt={restaurant.nome}

@@ -5,6 +5,7 @@ import Navbar from "@/components/Navbar";
 import { UserProvider } from "@/context/userContext";
 import { AuthProvider } from "@/context/authContext";
 import { Toaster } from "@/components/ui/sonner";
+import { CartProvider } from "@/context/cartContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,11 +34,13 @@ export default function RootLayout({
       >
         <AuthProvider>
           <UserProvider>
-            <Navbar />
-            <main className="container mx-auto px-4 py-4">
-              {children}
-              <Toaster />
-            </main>
+            <CartProvider>
+              <Navbar />
+              <main className="container mx-auto px-4 py-4">
+                {children}
+                <Toaster />
+              </main>
+            </CartProvider>
           </UserProvider>
         </AuthProvider>
       </body>

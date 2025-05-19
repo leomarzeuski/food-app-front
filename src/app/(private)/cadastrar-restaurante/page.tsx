@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/userContext";
 import { toast } from "sonner";
 import AddressForm from "@/components/AddressForm";
 import { restaurantService } from "@/services";
+import { getFallbackImageUrl } from "@/utils/imageUtils";
+import Image from "next/image";
 
 export default function CadastrarRestaurantePage() {
   const router = useRouter();
@@ -14,6 +16,9 @@ export default function CadastrarRestaurantePage() {
   const [nome, setNome] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [addressData, setAddressData] = useState({
     cep: "",
     rua: "",
@@ -38,6 +43,38 @@ export default function CadastrarRestaurantePage() {
 
   const handleRemoveCategory = (category: string) => {
     setCategories(categories.filter((c) => c !== category));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddCategory();
+    }
+  };
+
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    setImageUrl(url);
+    setImagePreview(url);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("A imagem deve ter no máximo 2MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      setImagePreview(result);
+      setImageUrl(result);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -77,6 +114,8 @@ export default function CadastrarRestaurantePage() {
         longitude: -46.6333,
       };
 
+      const finalImageUrl = imageUrl || getFallbackImageUrl(categories);
+
       await restaurantService.createRestaurant({
         nome,
         categories,
@@ -90,6 +129,7 @@ export default function CadastrarRestaurantePage() {
         isOpen: true,
         location: defaultLocation,
         userId: user.id,
+        imageUrl: finalImageUrl,
       });
 
       toast.success("Restaurante cadastrado com sucesso!");
@@ -129,6 +169,7 @@ export default function CadastrarRestaurantePage() {
                 type="text"
                 value={newCategory}
                 onChange={(e) => setNewCategory(e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Ex: Italiana, Pizza, Vegana..."
                 className="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
               />
@@ -160,6 +201,62 @@ export default function CadastrarRestaurantePage() {
                 ))}
               </div>
             )}
+          </div>
+
+          <div>
+            <label className="block mb-1 font-medium">
+              Imagem do Restaurante
+            </label>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">
+                  Enviar imagem:
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">
+                  Ou use uma URL de imagem:
+                </label>
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={handleImageUrlChange}
+                  placeholder="https://exemplo.com/imagem.jpg"
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+
+              {imagePreview ? (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Pré-visualização:
+                  </p>
+                  <div className="relative w-full h-48 rounded-lg overflow-hidden bg-gray-100">
+                    <Image
+                      src={imagePreview}
+                      alt="Pré-visualização do restaurante"
+                      fill
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-600">
+                    Se nenhuma imagem for fornecida, será usada uma imagem
+                    baseada nas categorias do seu restaurante.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
