@@ -4,6 +4,7 @@ export interface Rating {
   id: string;
   orderId: string;
   userId: string;
+  restaurantId: string;  // Campo adicionado
   nota: number;
   comentario: string;
   createdAt: string;
@@ -12,6 +13,7 @@ export interface Rating {
 export interface CreateRatingDto {
   orderId: string;
   userId: string;
+  restaurantId: string;  // Campo adicionado
   nota: number;
   comentario?: string;
 }

@@ -23,6 +23,7 @@ export interface Restaurant {
   createdAt: string;
   userId: string;
   imageUrl: string;
+  ratingAverage: number
 }
 
 export interface CreateRestaurantDto {

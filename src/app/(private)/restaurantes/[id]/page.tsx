@@ -160,7 +160,7 @@ export default function RestaurantDetail() {
   };
 
   const handleSubmitRating = async () => {
-    if (!user || userOrders.length === 0 || isRestaurantUser) return;
+    if (!user || userOrders.length === 0 || isRestaurantUser || !restaurant) return;
 
     try {
       setSubmitLoading(true);
@@ -170,6 +170,7 @@ export default function RestaurantDetail() {
         userId: user.id,
         nota: rating,
         comentario: comment.trim() || undefined,
+        restaurantId: restaurant.id
       };
 
       const createdRating = await ratingService.createRating(ratingData);

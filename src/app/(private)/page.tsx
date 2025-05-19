@@ -40,7 +40,7 @@ export default function RestaurantesPage() {
 
         const enhancedData = data.map((restaurant) => ({
           ...restaurant,
-          rating: 4.5,
+          // rating: 4.5,
           deliveryTime: "30-45 min",
         }));
 
@@ -165,7 +165,7 @@ export default function RestaurantesPage() {
                   </div>
                   <div className="flex items-center text-gray-600">
                     <span className="flex items-center text-yellow-500 mr-2">
-                      <FaStar className="mr-1" /> {restaurant.rating || 4.5}
+                      <FaStar className="mr-1" /> {restaurant.ratingAverage}
                     </span>
                     <span className="flex items-center">
                       <FaMotorcycle className="mr-1" />{" "}
