@@ -42,7 +42,6 @@ export default function AddressForm({
   const [loadingCep, setLoadingCep] = useState(false);
   const [cepError, setCepError] = useState("");
 
-  // Update form data when initial values change
   useEffect(() => {
     if (initialValues) {
       setCep(initialValues.cep || "");
@@ -56,7 +55,6 @@ export default function AddressForm({
     }
   }, [initialValues]);
 
-  // Search address by CEP
   const searchAddressByCep = async () => {
     if (cep.length !== 8) {
       setCepError("CEP deve conter 8 dígitos");
@@ -84,13 +82,11 @@ export default function AddressForm({
           apelido,
         };
 
-        // Set form values
         setRua(updatedAddress.rua);
         setBairro(updatedAddress.bairro);
         setCidade(updatedAddress.cidade);
         setEstado(updatedAddress.estado);
 
-        // Notify parent component
         onAddressChange(updatedAddress);
       }
     } catch (error) {
@@ -113,7 +109,6 @@ export default function AddressForm({
   };
 
   const handleInputChange = (field: string, value: string) => {
-    // Update local state
     switch (field) {
       case "rua":
         setRua(value);
@@ -138,7 +133,6 @@ export default function AddressForm({
         break;
     }
 
-    // Notify parent component of the change
     const updatedAddress = {
       cep,
       rua: field === "rua" ? value : rua,

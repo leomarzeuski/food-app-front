@@ -1,4 +1,3 @@
-// services/authService.ts
 import api from './api';
 import Cookies from 'js-cookie';
 import { User } from './userService';

@@ -40,7 +40,6 @@ export default function RestaurantesPage() {
 
         const enhancedData = data.map((restaurant) => ({
           ...restaurant,
-          // rating: 4.5,
           deliveryTime: "30-45 min",
         }));
 

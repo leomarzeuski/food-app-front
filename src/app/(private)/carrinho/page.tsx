@@ -106,7 +106,7 @@ export default function CarrinhoPage() {
 
     try {
       const orderPromises = Object.entries(itemsByRestaurant)
-        .filter(([restaurantId]) => restaurantId !== "unknown") // Skip items without restaurantId
+        .filter(([restaurantId]) => restaurantId !== "unknown")
         .map(async ([restaurantId, restaurantData]) => {
           const orderData: CreateOrderDto = {
             userId: user.id,

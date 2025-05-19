@@ -16,7 +16,6 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
   const [currentStep, setCurrentStep] = useState(2);
   const [tempoRestante, setTempoRestante] = useState(25);
 
-  // Mock order data
   const pedido = {
     id: params.id,
     restauranteId: "rest1",
@@ -36,7 +35,7 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
       nome: "Leo",
       avaliacao: 4.8,
     },
-    status: "preparando", // confirmado, preparando, a caminho, entregue
+    status: "preparando",
     itens: [
       {
         nome: "Pizza Margherita",
@@ -64,7 +63,6 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
   };
 
   useEffect(() => {
-    // Simulate order status progression in demo
     const timer = setTimeout(() => {
       if (status === "preparando") {
         setStatus("a caminho");
@@ -77,13 +75,12 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
     return () => clearTimeout(timer);
   }, [status, tempoRestante]);
 
-  // Update countdown timer
   useEffect(() => {
     if (tempoRestante <= 0) return;
 
     const interval = setInterval(() => {
       setTempoRestante((prev) => Math.max(0, prev - 1));
-    }, 60000); // Update every minute
+    }, 60000);
 
     return () => clearInterval(interval);
   }, [tempoRestante]);
@@ -114,7 +111,6 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
         <h1 className="text-2xl font-bold">Acompanhar Pedido</h1>
       </div>
 
-      {/* Order Status */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 relative rounded-lg overflow-hidden">
@@ -132,9 +128,7 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Progress Tracker */}
         <div className="relative mb-12">
-          {/* Progress Line */}
           <div className="absolute left-0 top-4 w-full h-1 bg-gray-200">
             <div
               className="h-full bg-red-500"
@@ -142,7 +136,6 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
             ></div>
           </div>
 
-          {/* Steps */}
           <div className="flex justify-between relative">
             {steps.map((step) => (
               <div key={step.id} className="text-center">
@@ -161,7 +154,6 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* Estimated Delivery */}
         <div className="text-center mb-6">
           <h3 className="font-bold text-lg mb-1">
             {status === "a caminho"
@@ -175,7 +167,6 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
           </p>
         </div>
 
-        {/* Delivery Person (visible only when delivery is on the way) */}
         {status === "a caminho" && (
           <div className="border-t border-gray-200 pt-4 mt-4">
             <div className="flex justify-between items-center">
@@ -199,7 +190,6 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
         )}
       </div>
 
-      {/* Order Details */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 className="font-bold text-lg mb-4">Detalhes do Pedido</h2>
         <div className="space-y-2 mb-4">
@@ -228,7 +218,6 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
         </div>
       </div>
 
-      {/* Delivery Address */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 className="font-bold text-lg mb-4">Endereço de Entrega</h2>
         <p>
@@ -240,7 +229,6 @@ export default function PedidoPage({ params }: { params: { id: string } }) {
         </p>
       </div>
 
-      {/* Payment Information */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="font-bold text-lg mb-4">Pagamento</h2>
         <p>{pedido.pagamento.metodo}</p>
