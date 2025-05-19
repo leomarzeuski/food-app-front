@@ -10,11 +10,14 @@ import {
   FaUtensils,
   FaBox,
 } from "react-icons/fa";
+import { useParams } from "next/navigation";
 
-export default function PedidoPage({ params }: { params: { id: string } }) {
+export default function PedidoPage() {
   const [status, setStatus] = useState("preparando");
   const [currentStep, setCurrentStep] = useState(2);
   const [tempoRestante, setTempoRestante] = useState(25);
+
+  const params = useParams<{ id: string }>();
 
   const pedido = {
     id: params.id,
